@@ -1,13 +1,10 @@
-# BDSM 倾向人格测试（Vue 3）
+# BDSM 倾向人格测试
 
 这是一个简单的前端小应用，基于 Vite + Vue 3，提供非诊断性的问卷测试，用于自我探索。测试结果仅供参考，所有真实活动需建立在成年、知情、双方自愿与安全原则之上。
 
 快速开始（Windows PowerShell）：
 
 ```powershell
-# 进入项目目录
-cd f:/web/dbsm.aoe.top
-
 # 安装依赖
 npm install
 
