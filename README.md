@@ -12,22 +12,7 @@ npm install
 npm run dev
 ```
 
-默认会在本地打开一个开发地址（通常 http://localhost:5173）。
+默认会在本地打开一个开发地址（通常 http://localhost:5173 ）。
 
 注意：本示例不包含后端或数据上报。若需保存结果或增加更多题目，请编辑 `src/data/questions.js`。
 
-部署到 GitHub Pages
--------------------
-
-项目包含方便的一键部署脚本（使用 `gh-pages`）：
-
-1. 本地快速部署（将 `dist/` 推送到 `gh-pages` 分支）：
-
-```powershell
-npm install
-npm run deploy
-```
-
-2. 自动部署：已添加 GitHub Actions 工作流，推送到 `main` 分支时会自动构建并将 `dist/` 发布到 `gh-pages` 分支。
-
-注意：仓库设置中需启用 GitHub Pages，选择 `gh-pages` 分支作为发布源（通常 Actions 会自动创建并推送该分支）。
