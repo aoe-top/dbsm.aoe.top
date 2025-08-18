@@ -58,106 +58,143 @@
     </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue'
 import questions from '../data/questions'
-export default {
-    data() {
-        return {
-            consent: false,
-            started: false,
-            finished: false,
-            questions,
-            current: 0,
-            answers: Array(questions.length).fill(null),
-            totals: {},
-            autoAdvanceTimer: null
-        }
-    },
-    mounted() {
-        try {
-            const raw = localStorage.getItem('dbsm_last_answers')
-            if (raw) {
-                const parsed = JSON.parse(raw)
-                if (Array.isArray(parsed) && parsed.length === this.questions.length) {
-                    this.answers = parsed
-                }
-            }
-        } catch (e) { }
-    },
-    methods: {
-        start() { this.started = true },
-        optionLabel(n) {
-            const map = { 1: '非常不同意', 2: '不同意', 3: '中立', 4: '同意', 5: '非常同意' }
-            return map[n]
-        },
-        select(n) {
-            // set answer
-            this.$set ? this.$set(this.answers, this.current, n) : (this.answers.splice(this.current, 1, n))
-            try { localStorage.setItem('dbsm_last_answers', JSON.stringify(this.answers)) } catch (e) { }
 
-            // clear any pending auto-advance
-            if (this.autoAdvanceTimer) { clearTimeout(this.autoAdvanceTimer); this.autoAdvanceTimer = null }
+// 响应式数据
+const consent = ref(false)
+const started = ref(false)
+const finished = ref(false)
+const current = ref(0)
+const answers = ref(Array(questions.length).fill(null))
+const totals = ref({})
+const autoAdvanceTimer = ref(null)
 
-            // small delay to allow UI highlight, then auto-advance or submit
-            this.autoAdvanceTimer = setTimeout(() => {
-                this.autoAdvanceTimer = null
-                if (this.current + 1 === this.questions.length) {
-                    this.calculate()
-                } else {
-                    this.current++
-                }
-            }, 300)
-        },
-        prev() {
-            if (this.autoAdvanceTimer) { clearTimeout(this.autoAdvanceTimer); this.autoAdvanceTimer = null }
-            if (this.current > 0) this.current--
-        },
-        next() {
-            if (!this.answers[this.current]) return
-            if (this.current + 1 === this.questions.length) {
-                this.calculate()
-            } else {
-                this.current++
-            }
-        },
-        calculate() {
-            const totals = { dominant: 0, submissive: 0, switcher: 0, sensation: 0 }
-            this.questions.forEach((q, i) => {
-                const v = this.answers[i] || 3
-                Object.keys(q.weights).forEach(k => {
-                    totals[k] += q.weights[k] * (v - 3)
-                })
-            })
-            this.totals = totals
-            this.finished = true
-        },
-        formatLabel(k) {
-            const map = { dominant: '主导 (Dominant)', submissive: '臣服 (Submissive)', switcher: '双向 (Switch)', sensation: '感官寻求 (Sensation)' }
-            return map[k] || k
-        },
-        restart() {
-            if (this.autoAdvanceTimer) { clearTimeout(this.autoAdvanceTimer); this.autoAdvanceTimer = null }
-            this.consent = false; this.started = false; this.finished = false; this.current = 0; this.answers = Array(this.questions.length).fill(null); this.totals = {}
-            try { localStorage.removeItem('dbsm_last_answers') } catch (e) { }
-        },
-        exportResults() {
-            const payload = { answers: this.answers, totals: this.totals, date: new Date().toISOString() }
-            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url; a.download = 'dbsm_results.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
+// 计算属性
+const topLabel = computed(() => {
+    if (!totals.value) return ''
+    const entries = Object.entries(totals.value)
+    entries.sort((a, b) => b[1] - a[1])
+    const top = entries[0]
+    return formatLabel(top[0])
+})
+
+// 方法定义
+const start = () => {
+    started.value = true
+}
+
+const optionLabel = (n) => {
+    const map = { 1: '非常不同意', 2: '不同意', 3: '中立', 4: '同意', 5: '非常同意' }
+    return map[n]
+}
+
+const select = (n) => {
+    // 设置答案
+    answers.value.splice(current.value, 1, n)
+
+    try {
+        localStorage.setItem('dbsm_last_answers', JSON.stringify(answers.value))
+    } catch (e) { }
+
+    // 清除任何待处理的自动前进
+    if (autoAdvanceTimer.value) {
+        clearTimeout(autoAdvanceTimer.value)
+        autoAdvanceTimer.value = null
+    }
+
+    // 小延迟以允许UI高亮，然后自动前进或提交
+    autoAdvanceTimer.value = setTimeout(() => {
+        autoAdvanceTimer.value = null
+        if (current.value + 1 === questions.length) {
+            calculate()
+        } else {
+            current.value++
         }
-    },
-    computed: {
-        topLabel() {
-            if (!this.totals) return ''
-            const entries = Object.entries(this.totals)
-            entries.sort((a, b) => b[1] - a[1])
-            const top = entries[0]
-            return this.formatLabel(top[0])
-        }
+    }, 300)
+}
+
+const prev = () => {
+    if (autoAdvanceTimer.value) {
+        clearTimeout(autoAdvanceTimer.value)
+        autoAdvanceTimer.value = null
+    }
+    if (current.value > 0) current.value--
+}
+
+const next = () => {
+    if (!answers.value[current.value]) return
+    if (current.value + 1 === questions.length) {
+        calculate()
+    } else {
+        current.value++
     }
 }
+
+const calculate = () => {
+    const result = { dominant: 0, submissive: 0, switcher: 0, sensation: 0 }
+    questions.forEach((q, i) => {
+        const v = answers.value[i] || 3
+        Object.keys(q.weights).forEach(k => {
+            result[k] += q.weights[k] * (v - 3)
+        })
+    })
+    totals.value = result
+    finished.value = true
+}
+
+const formatLabel = (k) => {
+    const map = {
+        dominant: '主导 (Dominant)',
+        submissive: '臣服 (Submissive)',
+        switcher: '双向 (Switch)',
+        sensation: '感官寻求 (Sensation)'
+    }
+    return map[k] || k
+}
+
+const restart = () => {
+    if (autoAdvanceTimer.value) {
+        clearTimeout(autoAdvanceTimer.value)
+        autoAdvanceTimer.value = null
+    }
+    consent.value = false
+    started.value = false
+    finished.value = false
+    current.value = 0
+    answers.value = Array(questions.length).fill(null)
+    totals.value = {}
+    try {
+        localStorage.removeItem('dbsm_last_answers')
+    } catch (e) { }
+}
+
+const exportResults = () => {
+    const payload = { answers: answers.value, totals: totals.value, date: new Date().toISOString() }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'dbsm_results.json'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+}
+
+// 生命周期钩子
+onMounted(() => {
+    try {
+        const raw = localStorage.getItem('dbsm_last_answers')
+        if (raw) {
+            const parsed = JSON.parse(raw)
+            if (Array.isArray(parsed) && parsed.length === questions.length) {
+                answers.value = parsed
+            }
+        }
+    } catch (e) { }
+})
 </script>
 
 <style scoped>

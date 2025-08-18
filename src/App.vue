@@ -13,11 +13,8 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import Questionnaire from './components/Questionnaire.vue'
-export default {
-    components: { Questionnaire }
-}
 </script>
 
 <style scoped>
