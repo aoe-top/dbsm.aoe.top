@@ -2,7 +2,9 @@
     <div class="container-card">
         <header>
             <h1>BDSM 倾向人格测试</h1>
-            <p class="subtitle">非诊断性工具，仅用于自我探索与了解偏好。所有活动必须基于成年与双方自愿、知情、及安全原则。</p>
+            <p class="subtitle">
+                非诊断性工具，仅用于自我探索与了解偏好。所有活动必须基于成年与双方自愿、知情、及安全原则。
+            </p>
         </header>
 
         <Questionnaire />
@@ -11,9 +13,12 @@
             <small>由本地应用生成 — 保持隐私，不会自动上报结果。</small>
             <div class="friendly-links-panel">
                 <p class="friendly-links-title">友情链接</p>
-                <p class="friendly-links-subtitle">实时同步站群最新友链，为测试页底部补充统一入口。</p>
-                <div v-if="pending" class="friendly-links-state">友链加载中...</div>
-                <div v-else-if="failed" class="friendly-links-state">友链加载失败，请稍后重试。</div>
+                <div v-if="pending" class="friendly-links-state">
+                    友链加载中...
+                </div>
+                <div v-else-if="failed" class="friendly-links-state">
+                    友链加载失败，请稍后重试。
+                </div>
                 <div v-else class="friendly-links-list">
                     <a
                         v-for="link in friendLinks"
@@ -21,8 +26,7 @@
                         :href="link.url"
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="friendly-links-item"
-                    >
+                        class="friendly-links-item">
                         {{ link.name }}
                     </a>
                 </div>
@@ -32,31 +36,31 @@
 </template>
 
 <script setup>
-import Questionnaire from './components/Questionnaire.vue'
-import { onMounted, ref } from 'vue'
+import Questionnaire from "./components/Questionnaire.vue";
+import { onMounted, ref } from "vue";
 
-const friendLinks = ref([])
-const pending = ref(true)
-const failed = ref(false)
+const friendLinks = ref([]);
+const pending = ref(true);
+const failed = ref(false);
 
 const loadFriendLinks = async () => {
     try {
-        const response = await fetch('https://api.aoe.top/api/friendly/links')
+        const response = await fetch("https://api.aoe.top/api/friendly/links");
         if (!response.ok) {
-            throw new Error(`Failed to load links: ${response.status}`)
+            throw new Error(`Failed to load links: ${response.status}`);
         }
 
-        const data = await response.json()
-        friendLinks.value = Array.isArray(data) ? data : []
+        const data = await response.json();
+        friendLinks.value = Array.isArray(data) ? data : [];
     } catch (error) {
-        console.error(error)
-        failed.value = true
+        console.error(error);
+        failed.value = true;
     } finally {
-        pending.value = false
+        pending.value = false;
     }
-}
+};
 
-onMounted(loadFriendLinks)
+onMounted(loadFriendLinks);
 </script>
 
 <style scoped>
@@ -80,36 +84,29 @@ header h1 {
 footer {
     text-align: center;
     margin-top: 24px;
-    color: #666
+    color: #666;
 }
 
 .friendly-links-panel {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid rgba(17, 17, 17, 0.12);
+    margin-top: 14px;
+    padding-top: 8px;
 }
 
 .friendly-links-title {
     margin: 0;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #1f2937;
-}
-
-.friendly-links-subtitle {
-    margin: 10px 0 0;
-    color: #6b7280;
-    line-height: 1.7;
+    color: #4b5563;
 }
 
 .friendly-links-list {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 10px;
-    margin-top: 14px;
+    gap: 0.3rem 0.5rem;
+    margin-top: 0.45rem;
 }
 
 .friendly-links-item,
@@ -117,24 +114,24 @@ footer {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 40px;
-    padding: 0 14px;
+    min-height: 0;
+    padding: 0.2rem 0.4rem;
     border-radius: 999px;
-    border: 1px solid rgba(31, 41, 55, 0.12);
-    background: rgba(255, 255, 255, 0.8);
-    color: #374151;
+    border: 0;
+    background: transparent;
+    color: #4b5563;
+    font-size: 12px;
+    line-height: 1.4;
     text-decoration: none;
-    transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    transition: color 0.2s ease, opacity 0.2s ease;
 }
 
 .friendly-links-item:hover {
-    transform: translateY(-2px);
-    border-color: rgba(55, 65, 81, 0.28);
     color: #111827;
 }
 
 .friendly-links-state {
     width: fit-content;
-    margin: 14px auto 0;
+    margin: 0.45rem auto 0;
 }
 </style>
